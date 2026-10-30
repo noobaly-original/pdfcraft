@@ -28,6 +28,7 @@ struct FallbackBuilder {
 
 struct FontResolver<'a> {
     doc: &'a mut Document,
+    draft: &'a str,
     fonts: &'a mut Dict,
     metrics: &'a mut std::collections::BTreeMap<String, Metrics>,
     full_faces: HashMap<String, String>,
@@ -138,7 +139,7 @@ impl CharacterPreparation<'_> {
         let mut chars = Vec::new();
         let mut substituted = None;
         let mut fallback = FallbackBuilder::new(max_glyphs);
-        let mut resolver = FontResolver { doc, fonts, metrics, full_faces: HashMap::new(), programs: HashMap::new() };
+        let mut resolver = FontResolver { doc, draft, fonts, metrics, full_faces: HashMap::new(), programs: HashMap::new() };
         for (range, index) in spans {
             let source = lines.get(index).unwrap_or(first);
             let start = range.start;

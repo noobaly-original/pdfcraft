@@ -400,7 +400,7 @@ struct FontInputs<'a> {
     family_requested: bool,
 }
 
-fn choose_font(inputs: &FontInputs<'_>, fonts_res: &mut Dict) -> Result<FontChoice, EditError> {
+fn choose_font(doc: &Document, inputs: &FontInputs<'_>, fonts_res: &mut Dict) -> Result<FontChoice, EditError> {
     if let Some(m) = inputs.source.cloned() {
         let name = inputs.font_name.to_owned();
         return Ok(FontChoice {
@@ -836,6 +836,7 @@ pub(crate) fn rewrite_block_from(
     let right_edge = if anchored_right { right_edge } else { width };
     let wrapped = wrap(&text, width + 0.5, |s| advance.of(s));
     let font = choose_font(
+        doc,
         &FontInputs {
             source: source_metrics,
             type3: type3.as_ref(),

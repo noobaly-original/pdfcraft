@@ -141,6 +141,7 @@ impl Interp<'_> {
                 let len = s.chars().count();
                 Val::Str(s.chars().skip(len.saturating_sub(k)).collect())
             }
+            "len" => Val::Num(self.arg_str(args, 0)?.chars().count() as f64),
             "lower" => {
                 let s = self.arg_str(args, 0)?;
                 let turkish = s.chars().any(crate::is_turkish_char);
