@@ -107,8 +107,8 @@ pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter,
         content.extend(body);
         content.extend_from_slice(END.as_bytes());
         // A name already there is that very font (see `free_font_name`): left as it is.
-        if !page_fonts(doc, page).contains(resource.as_bytes()) {
-            add_page_resources(doc, page, None, &[(resource.into_bytes(), base)])?;
+        if !page_fonts(doc, page).contains(resource.as_bytes()) || pdfcraft_fonts::has_turkish_bytes(&content) {
+            add_page_resources(doc, page, None, &[(resource.into_bytes(), base)], Some(&content))?;
         }
         let page = &page_list(doc)[i];
         place(doc, page, MarkKind::HeaderFooter, content, false)?;
@@ -192,7 +192,7 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
         }
         content.extend_from_slice(b"ET\n");
         content.extend_from_slice(END.as_bytes());
-        add_resources(doc, &page, Some(opacity), None)?;
+        add_resources(doc, &page, Some(opacity), Some(&content))?;
         let page = &page_list(doc)[i];
         place(doc, page, MarkKind::Watermark, content, wm.behind)?;
     }

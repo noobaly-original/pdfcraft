@@ -61,5 +61,10 @@ pub mod formcalc;
 pub mod xfa;
 pub mod xfa_session;
 
+/// Whether `c` is one of the six Turkish-specific letters (`Ğ`, `ğ`, `İ`, `ı`, `Ş`, `ş`).
+pub(crate) fn is_turkish_char(c: char) -> bool {
+    matches!(c, 'Ğ' | 'ğ' | 'İ' | 'ı' | 'Ş' | 'ş')
+}
+
 #[cfg(test)]
 mod tests;
