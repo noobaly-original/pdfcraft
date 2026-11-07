@@ -98,11 +98,7 @@ impl FontResolver<'_> {
             .fonts
             .get(name.as_bytes())
             .and_then(|f| {
-                self.doc
-                    .resolve(f)
-                    .as_dict()
-                    .and_then(|d| d.get(b"Encoding"))
-                    .and_then(|e| self.doc.resolve(e).as_dict().cloned().map(Object::Dict))
+                self.doc.resolve(f).as_dict().and_then(|d| d.get(b"Encoding")).and_then(|e| self.doc.resolve(e).as_dict().cloned().map(Object::Dict))
             })
             .unwrap_or_else(|| pdfcraft_fonts::standard_encoding(self.draft));
         let mut font = Dict::new();

@@ -427,7 +427,7 @@ fn choose_font(doc: &Document, inputs: &FontInputs<'_>, fonts_res: &mut Dict) ->
     let encoding = fonts_res
         .get(name.as_bytes())
         .and_then(|f| doc.resolve(f).as_dict().and_then(|d| d.get(b"Encoding")).and_then(|e| doc.resolve(e).as_dict().cloned().map(Object::Dict)))
-        .unwrap_or_else(|| pdfcraft_fonts::standard_encoding(&flat));
+        .unwrap_or_else(|| pdfcraft_fonts::standard_encoding(flat));
     let mut f = Dict::new();
     f.set(b"Type".to_vec(), Object::name("Font"));
     f.set(b"Subtype".to_vec(), Object::name("Type1"));

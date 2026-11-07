@@ -132,26 +132,26 @@ fn run_until_asked(h: &mut Harness<'static, PdfCraftApp>, calls: &std::sync::ato
 #[test]
 fn the_preference_keeps_the_check_at_start_from_reaching_the_network() {
     use std::sync::atomic::Ordering::SeqCst;
-    assert!(PdfCraftApp::new().update_check_at_start, "on by default");
+    assert!(!PdfCraftApp::new().update_check_at_start, "off by default");
 
-    // The same start with the preference left on does ask, so a count of none below means
-    // the preference held the check back and not that it hadn't run yet.
+    // Off by default: nothing is asked at start.
     let (mut h, calls) = started_with("{}");
+    run_until_asked(&mut h, &calls, std::time::Duration::from_millis(500));
+    assert_eq!(calls.load(SeqCst), 0, "off by default, nothing is asked at start");
+
+    // With the preference turned on, the app asks at start.
+    let (mut h, calls) = started_with(r#"{"update_check_at_start": true}"#);
     run_until_asked(&mut h, &calls, std::time::Duration::from_secs(30));
     assert_eq!(calls.load(SeqCst), 1, "on, the app asks at start");
 
-    let (mut h, calls) = started_with(r#"{"update_check_at_start": false}"#);
-    run_until_asked(&mut h, &calls, std::time::Duration::from_millis(500));
-    assert_eq!(calls.load(SeqCst), 0, "nothing is asked at start");
-
     let mut restarted = PdfCraftApp::new();
     restarted.restore(&h.state().persist());
-    assert!(!restarted.update_check_at_start, "the choice is kept");
+    assert!(restarted.update_check_at_start, "the choice is kept");
 
     // Help ▸ Check for updates still asks.
     h.state_mut().execute("help.check_updates");
     settle(&mut h);
-    assert_eq!(calls.load(SeqCst), 1);
+    assert_eq!(calls.load(SeqCst), 2);
     h.get_by_label_contains("PdfCraft 99.0.0 is available");
 }
 
@@ -181,10 +181,10 @@ fn preferences_turn_the_check_at_start_off() {
 }
 
 #[test]
-fn settings_from_the_old_opt_in_leave_the_check_at_start_on() {
+fn settings_from_the_old_opt_in_leave_the_check_at_start_off() {
     let mut app = PdfCraftApp::new();
-    app.restore(r#"{"check_updates_at_start": false}"#);
-    assert!(app.update_check_at_start, "a key of the removed option decides nothing");
+    app.restore(r#"{"check_updates_at_start": true}"#);
+    assert!(!app.update_check_at_start, "a key of the removed option decides nothing");
 }
 
 #[test]
@@ -192,6 +192,7 @@ fn the_check_at_start_offers_the_prompt_and_later_dismisses_it() {
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(|_cc| {
         let mut app = PdfCraftApp::new();
         app.set_option("language", "en").unwrap();
+        app.update_check_at_start = true;
         app.set_update_source(source(Ok(Some("v99.0.0"))));
         app.set_startup_update_check(true);
         app
@@ -205,4 +206,14 @@ fn the_check_at_start_offers_the_prompt_and_later_dismisses_it() {
     h.get_by_label("LATER").click();
     h.run_steps(3);
     assert!(h.query_by_label_contains("is available").is_none(), "Later closes the prompt");
+}
+
+#[test]
+fn preferences_check_for_updates_button_triggers_check() {
+    let mut h = harness(Ok(Some("v99.0.0")));
+    h.state_mut().execute("app.preferences");
+    h.run_steps(3);
+    h.get_by_label("Check for updates…").click();
+    settle(&mut h);
+    h.get_by_label_contains("PdfCraft 99.0.0 is available");
 }
